@@ -1,0 +1,29 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc_c.h>
+
+using namespace std;
+using namespace cv;
+
+int main() {
+    Mat srcImage = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", srcImage);
+    if(!srcImage.data){
+        return -1;
+    }
+
+    Mat pyrDownImage, pyrUpImage;
+    pyrDown(srcImage, pyrDownImage, Size(srcImage.cols/2, srcImage.rows/2));
+    cv::imshow("pyrDown", pyrDownImage);
+
+    pyrUp(srcImage, pyrUpImage, Size(srcImage.cols * 2, srcImage.rows * 2));
+    cv::imshow("pyrUp", pyrUpImage);
+
+    Mat pryBuildImage;
+    pyrUp(pyrDownImage, pryBuildImage, Size(pyrDownImage.cols * 2, pyrDownImage.rows * 2));
+    cv::imshow("rebuild", pryBuildImage);
+
+    cv::waitKey(0);
+    return 0;
+}

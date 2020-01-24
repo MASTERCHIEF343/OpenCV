@@ -1,0 +1,47 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+using namespace std;
+using namespace cv;
+
+
+int main() {
+    Mat srcImage = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", srcImage);
+    if(!srcImage.data){
+        return -1;
+    }
+
+    Mat grayImage;
+    cvtColor(srcImage, grayImage, COLOR_RGB2GRAY);
+    //直方图参数
+    const int channels[1] = {0};    //单通道
+    const int histSize[1] = {256};  //直方图计算范围
+    float pranges[2] = {0, 255};    //直方图计算上下界范围
+    const float* ranges[1] = {pranges};
+    MatND hist;                     //输出的直方图(多个维度)
+    //计算直方图
+    calcHist(&grayImage, 1, channels, Mat(), hist, 1, histSize, ranges);
+    //显示直方图
+    int hist_w = 500;
+    int hist_h = 500;
+    int nHistSize = 255;
+    //区间
+    int bin_w = cvRound((double)hist_w / nHistSize);
+    Mat histImage(hist_w, hist_h, CV_8UC3, Scalar(0, 0, 0));
+    //直方图归一化到[0, histImage.rows]
+    normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
+    //画出
+    for(int i = 0;i < nHistSize;i++){
+        line(histImage, Point(bin_w * (i - 1), hist_h - cvRound(hist.at<float>(i-1))),
+             Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))),
+        Scalar(0, 0, 255), 2, 8, 0);
+    }
+    imshow("histImage", histImage);
+
+    cv::waitKey(0);
+    return 0;
+}

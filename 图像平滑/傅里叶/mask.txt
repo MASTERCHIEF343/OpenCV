@@ -1,0 +1,23 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc_c.h>
+
+using namespace std;
+using namespace cv;
+
+int main() {
+    Mat srcImage = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", srcImage);
+    if(!srcImage.data){
+        return -1;
+    }
+
+    Mat resultImage(srcImage.size(), srcImage.type());
+    Mat kern = (Mat_<float>(3, 3) << 0, 1, 0, 1, 0, 1, 0, 1, 0) / (float)(4);
+    filter2D(srcImage, resultImage, srcImage.depth(), kern);
+    imshow("res", resultImage);
+
+    cv::waitKey(0);
+    return 0;
+}

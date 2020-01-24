@@ -1,0 +1,85 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+using namespace std;
+using namespace cv;
+
+
+float caculateCurrentyEntorpy(Mat hist, int threshold){
+    float BackgroundSum = 0;
+    float targetSum = 0;
+    //存储每个灰度级的个数
+    const float* pDataHist = (float*) hist.ptr<float>(0);
+    for(int i = 0;i < 256;i++){
+        //累计背景值和前景值
+        if(i < threshold){
+            BackgroundSum += pDataHist[i];
+        }else{
+            targetSum += pDataHist[i];
+        }
+    }
+//    cout << BackgroundSum << ", " << targetSum << endl;
+    float BackgroundEntropy = 0;
+    float TargetEntropy = 0;
+    for(int i = 0;i < 256;i++){
+        if(i < threshold){
+            if(pDataHist[i] == 0){
+                continue;
+            }
+            float ratio = pDataHist[i] / BackgroundSum;
+            BackgroundEntropy += -ratio * logf(ratio);
+        }else{
+            if(pDataHist[i] == 0){
+                continue;
+            }
+            float ratio2 = pDataHist[i] / targetSum;
+            TargetEntropy += -ratio2 * logf(ratio2);
+        }
+    }
+    return (BackgroundEntropy + TargetEntropy);
+}
+
+Mat maxEntropy(Mat inputImage){
+    //直方图参数
+    const int channels[1] = {0};    //单通道
+    const int histSize[1] = {256};  //直方图计算范围
+    float pranges[2] = {0, 255};    //直方图计算上下界范围
+    const float* ranges[1] = {pranges};
+    MatND hist;                     //输出的直方图(多个维度)
+    //计算直方图
+    calcHist(&inputImage, 1, channels, Mat(), hist, 1, histSize, ranges);
+    float max_entorpy = 0;
+    int max_index = 0;
+    Mat result;
+    //遍历计算最大熵, 返回最适阈值
+    for(int i = 0;i < 256;i++){
+        float cur_entropy = caculateCurrentyEntorpy(hist, i);
+        if(cur_entropy > max_entorpy){
+            max_entorpy = cur_entropy;
+            max_index = i;
+        }
+    }
+    //根据最适阈值划分
+    threshold(inputImage, result, max_index, 255, THRESH_BINARY);
+    return result;
+}
+
+int main() {
+    Mat srcImage = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", srcImage);
+    if(!srcImage.data){
+        return -1;
+    }
+
+    Mat grayImage;
+    cvtColor(srcImage, grayImage, COLOR_RGB2GRAY);
+
+    Mat res = maxEntropy(grayImage);
+    imshow("res", res);
+
+    cv::waitKey(0);
+    return 0;
+}

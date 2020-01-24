@@ -1,0 +1,48 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+using namespace std;
+using namespace cv;
+
+int main() {
+    Mat srcImage = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", srcImage);
+    if(!srcImage.data){
+        return -1;
+    }
+
+    int rows = srcImage.rows;
+    int cols = srcImage.cols;
+
+    Mat dstImage = Mat(Size(150, 150), srcImage.type(), Scalar::all(0));
+    int dstRows = dstImage.rows;
+    int dstCols = dstImage.cols;
+
+    //坐标转换
+    float cx = (float)cols / dstCols;
+    float cy = (float)rows / dstRows;
+
+    for(int i = 0;i < dstCols;i++){
+        int ix = cvFloor(i * cx);
+        for(int j = 0;j < dstRows;j++){
+            int jy = cvFloor(j * cy);
+            //超过边界处理
+            if(ix > cols - 1){
+                ix = cols - 1;
+            }
+            if(jy > rows - 1){
+                jy = rows - 1;
+            }
+            //映射
+            dstImage.at<cv::Vec3b>(j, i) = srcImage.at<cv::Vec3b>(jy, ix);
+        }
+    }
+
+    imshow("res", dstImage);
+
+    cv::waitKey(0);
+    return 0;
+}

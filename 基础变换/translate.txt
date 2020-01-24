@@ -1,0 +1,66 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+using namespace std;
+using namespace cv;
+
+Mat imagetranslation1(Mat & src, int xoffset, int yoffset){
+    int nRows = src.rows;
+    int nCols = src.cols;
+
+    Mat resImage(src.size(), src.type());
+
+    for(int i = 0;i < nRows;i++){
+        for(int j = 0;j < nCols;j++){
+            int x = j - xoffset;
+            int y = i - yoffset;
+
+            //边界判断
+            if(x >= 0 && y >= 0 && x < nCols && y < nRows){
+                resImage.at<cv::Vec3b>(i, j) = src.ptr<cv::Vec3b>(y)[x];
+            }
+        }
+    }
+    return resImage;
+}
+
+Mat imagetranslation2(Mat & src, int xoffset, int yoffset){
+    int nRows = src.rows + abs(yoffset);
+    int nCols = src.cols + abs(xoffset);
+
+    Mat resImage(nRows, nCols, src.type());
+
+    for(int i = 0;i < nRows;i++){
+        for(int j = 0;j < nCols;j++){
+            int x = j - xoffset;
+            int y = i - yoffset;
+
+            //边界判断
+            if(x >= 0 && y >= 0 && x < nCols && y < nRows){
+                resImage.at<cv::Vec3b>(i, j) = src.ptr<cv::Vec3b>(y)[x];
+            }
+        }
+    }
+    return resImage;
+}
+
+int main() {
+    Mat src = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", src);
+    if(!src.data){
+        return -1;
+    }
+
+    int xoffset = 50;
+    int yoffset = 80;
+    Mat res1 = imagetranslation1(src, xoffset, yoffset);
+    imshow("translation_01", res1);
+
+    Mat res2 = imagetranslation2(src, xoffset, yoffset);
+    imshow("translation_02", res2);
+
+    cv::waitKey(0);
+    return 0;
+}

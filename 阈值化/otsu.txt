@@ -1,0 +1,86 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+using namespace std;
+using namespace cv;
+
+int OTSU(Mat & srcImg){
+    int nCols = srcImg.cols;
+    int nRows = srcImg.rows;
+
+    int threshold = 0;
+    //统计参数
+    int nSumPix[256];
+    float nProDis[256];
+    for(int i = 0;i < 256;i++){
+        nSumPix[i] = 0;
+        nProDis[i] = 0;
+    }
+    //灰度值概率
+    for(int i = 0;i < nRows;i++){
+        for(int j = 0;j < nCols;j++){
+            nSumPix[(int)srcImg.at<uchar>(i,j)]++;
+        }
+    }
+    for(int i = 0;i < 256;i++){
+        nProDis[i] = (float)nSumPix[i] / (nCols * nRows);
+    }
+    //计算前景、背景方差,找出最合适阈值
+    float w0, w1, u0_temp, u1_temp, u0, u1, delta_temp;
+    double delta_max = 0.0;
+    for(int i = 0;i < 256;i++){
+        w0 = w1 = u0_temp = u1_temp = u0 = u1 = delta_temp = 0;
+        for(int j = 0;j < 256;j++){
+            //背景
+            if(j <= i){
+                w0 += nProDis[j];
+                u0_temp += j * nProDis[j];
+            }
+            //前景
+            else {
+                w1 += nProDis[j];
+                u1_temp += j * nProDis[j];
+            }
+        }
+        //计算各类平均灰度
+        u0 = u0_temp / w0;
+        u1 = u1_temp / w1;
+        delta_temp = (float)(w0 * w1 * pow((u0 - u1), 2));
+        //阈值
+        if(delta_temp > delta_max){
+            delta_max = delta_temp;
+            threshold = i;
+        }
+    }
+    return threshold;
+}
+
+int main() {
+    Mat srcImage = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", srcImage);
+    if(!srcImage.data){
+        return -1;
+    }
+
+    Mat srcGray;
+    cvtColor(srcImage, srcGray, COLOR_RGB2GRAY);
+
+    int otsu = OTSU(srcGray);
+    Mat res = Mat::zeros(srcGray.rows, srcGray.cols, CV_8UC1);
+    for(int i = 0;i < srcGray.rows;i++){
+        for(int j = 0;j < srcGray.cols;j++){
+            if(srcGray.at<uchar>(i, j) > otsu){
+                res.at<uchar>(i, j) = 255;
+            }else{
+                res.at<uchar>(i, j) = 0;
+            }
+        }
+    }
+    imshow("res", res);
+
+    cv::waitKey(0);
+    return 0;
+}

@@ -1,0 +1,42 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+using namespace std;
+using namespace cv;
+
+int main() {
+    Mat srcImage = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", srcImage);
+    if(!srcImage.data){
+        return -1;
+    }
+
+    //创建仿射变换目标图像与原图像尺寸类型相同
+    Point2f srcTri[3];
+    Point2f dstTri[3];
+    Mat warp_dstImage = Mat::zeros(srcImage.rows, srcImage.cols, srcImage.type());
+
+    //设置三个点来计算仿射变换
+    srcTri[0] = Point2f(0, 0);
+    srcTri[1] = Point2f(srcImage.cols - 1, 0);
+    srcTri[2] = Point2f(0, srcImage.rows - 1);
+
+    dstTri[0] = Point2f(srcImage.cols*0.0, srcImage.rows*0.33);
+    dstTri[1] = Point2f(srcImage.cols*0.85, srcImage.rows*0.25);
+    dstTri[2] = Point2f(srcImage.cols*0.15, srcImage.rows*0.7);
+
+    //计算仿射变换矩阵
+    Mat warp_mat(2, 3, CV_32FC1);
+    warp_mat = getAffineTransform(srcTri, dstTri);
+
+    //对加载图形进行仿射变换操作
+    warpAffine(srcImage, warp_dstImage, warp_mat, warp_dstImage.size());
+    imshow("res", warp_dstImage);
+
+
+    cv::waitKey(0);
+    return 0;
+}

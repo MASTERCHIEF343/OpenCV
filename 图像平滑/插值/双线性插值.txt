@@ -1,0 +1,58 @@
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc_c.h>
+
+using namespace std;
+using namespace cv;
+
+Mat BilinearInterpolation(Mat srcImage){
+    int srcRows = srcImage.rows;
+    int srcCols = srcImage.cols;
+    int srcStep = srcImage.step;    //step[0]几行(面) step[1]每行几列(线) step[2]点的大小  大小是字节
+
+    Mat dstImage = Mat(Size(150, 150), srcImage.type(), Scalar::all(0));
+    int dstRows = dstImage.rows;
+    int dstCols = dstImage.cols;
+    int dstStep = dstImage.step;
+
+    //数据定义、转换
+    IplImage src = srcImage;
+    IplImage dst = dstImage;
+    //定义坐标
+    float srcX = 0, srcY = 0;
+    float t1X = 0, t1Y = 0, t1Z = 0;
+    float t2X = 0, t2Y = 0, t2Z = 0;
+    for(int j = 0;j < dstRows - 1;j++){
+        for(int i = 0;i < dstCols - 1;i++){
+            srcX = (i + 0.5) * ((float)srcCols) / (dstRows) - 0.5;
+            srcY = (j + 0.5) * ((float)srcRows) / (dstRows) - 0.5;
+
+            int iSrcX = (int)srcX;
+            int iSrcY = (int)srcY;
+            //3通道求邻域加权值1
+            t1X = ((uchar*)(src.imageData + srcStep * iSrcY))[iSrcX * 3 + 0] * (1-std::abs(srcX - iSrcX)) +
+                    ((uchar*)(src.imageData + srcStep * iSrcY))[(iSrcX+1) * 3 + 0]* (srcX - iSrcX);
+            t1Y = ((uchar*)(src.imageData + srcStep * iSrcY))[iSrcX * 3 + 1] * (1-std::abs(srcX - iSrcX)) +
+                  ((uchar*)(src.imageData + srcStep * iSrcY))[(iSrcX+1) * 3 + 1]* (srcX - iSrcX);
+            t1Z = ((uchar*)(src.imageData + srcStep * iSrcY))[iSrcX * 3 + 2] * (1-std::abs(srcX - iSrcX)) +
+                  ((uchar*)(src.imageData + srcStep * iSrcY))[(iSrcX+1) * 3 + 2]* (srcX - iSrcX);
+            //3通道求邻域加权值2
+            t2X = ((uchar*)(src.imageData + srcStep * (iSrcY+1)))[iSrcX * 3] * (1-std::abs(srcX - iSrcX)) +
+                  ((uchar*)(src.imageData + srcStep * (iSrcY+1)))[(iSrcX+1) * 3]* (srcX - iSrcX);
+        }
+    }
+}
+
+int main() {
+    Mat srcImage = imread("/Users/masterchief/Opencv_Test/left.png");
+    cv::imshow("src", srcImage);
+    if(!srcImage.data){
+        return -1;
+    }
+
+
+
+    cv::waitKey(0);
+    return 0;
+}
